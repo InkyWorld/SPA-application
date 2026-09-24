@@ -6,7 +6,6 @@ Default ordering is LIFO (Meta.ordering). Pagination: 25 top-level / page.
 
 from __future__ import annotations
 
-from django.conf import settings
 from django.core.cache import cache
 from django.db.models import QuerySet
 
@@ -28,7 +27,7 @@ def parse_sort_param(raw: str | None) -> list[str]:
     if not raw:
         return ["-created_at"]
     fields = [f.strip() for f in raw.split(",") if f.strip()]
-    cleaned = [f for f in fields if f.lstrip("-") in SORTABLE_FIELDS]
+    cleaned = [f for f in fields if f.removeprefix("-") in SORTABLE_FIELDS]
     return cleaned or ["-created_at"]
 
 
@@ -52,15 +51,6 @@ def bump_list_cache_version() -> None:
         cache.incr(LIST_CACHE_VERSION_KEY)
     except ValueError:
         cache.set(LIST_CACHE_VERSION_KEY, 1, timeout=None)
-
-
-def list_cache_ttl() -> int:
-    """Return the list cache TTL in seconds.
-
-    Returns:
-        TTL from settings.
-    """
-    return settings.COMMENTS_LIST_CACHE_TTL
 
 
 def top_level_qs(sort: str | None = None) -> QuerySet[Comment]:

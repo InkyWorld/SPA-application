@@ -6,6 +6,7 @@ signals, fired by model save; verification happens in the serializer.
 
 from __future__ import annotations
 
+from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import generics, status, viewsets
@@ -66,11 +67,12 @@ class CommentViewSet(viewsets.GenericViewSet):
             Paginated response with nested comment trees (cached 5 min).
         """
         sort = request.query_params.get("sort")
-        page_number = self.paginator.get_page_number(request, selectors.top_level_qs(sort))
+        qs = selectors.top_level_qs(sort)
+        page_number = self.paginator.get_page_number(request, qs)
         cached = cache.get(selectors.list_cache_key(sort, page_number))
         if cached is not None:
             return Response(cached)
-        page = self.paginate_queryset(selectors.top_level_qs(sort))
+        page = self.paginate_queryset(qs)
         # page already arrives in the requested sort order — keep it.
         nodes = self._nodes_for_page(list(page) if page else [])
         serializer = CommentNodeSerializer(
@@ -80,7 +82,7 @@ class CommentViewSet(viewsets.GenericViewSet):
         response = self.get_paginated_response(serializer.data)
         cache.set(
             selectors.list_cache_key(sort, page_number),
-            response.data, timeout=selectors.list_cache_ttl(),
+            response.data, timeout=settings.COMMENTS_LIST_CACHE_TTL,
         )
         return response
 

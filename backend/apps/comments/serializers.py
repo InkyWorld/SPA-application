@@ -18,6 +18,23 @@ USERNAME_RE = re.compile(r"^[A-Za-z0-9]+$")
 CAPTCHA_RE = re.compile(r"^[A-Za-z0-9]+$")
 
 
+def validate_username_shape(value: str) -> str:
+    """Check the task's login shape shared by both serializers.
+
+    Args:
+        value: Candidate user name.
+
+    Returns:
+        The unchanged value when valid.
+
+    Raises:
+        serializers.ValidationError: When other characters are present.
+    """
+    if not USERNAME_RE.fullmatch(value):
+        raise serializers.ValidationError("Only latin letters and digits.")
+    return value
+
+
 class CommentCreateSerializer(serializers.ModelSerializer):
     parent_id = serializers.IntegerField(required=False, allow_null=True)
     # Single attachment slot (image or TXT); the creator routes it by extension.
@@ -49,9 +66,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         Raises:
             serializers.ValidationError: When other characters are present.
         """
-        if not USERNAME_RE.fullmatch(value):
-            raise serializers.ValidationError("Only latin letters and digits.")
-        return value
+        return validate_username_shape(value)
 
     def validate_captcha_value(self, value: str) -> str:
         """Accept latin letters and digits only (task requirement).
@@ -226,8 +241,7 @@ class RegisterSerializer(serializers.Serializer):
         Raises:
             serializers.ValidationError: On bad shape or taken name.
         """
-        if not USERNAME_RE.fullmatch(value):
-            raise serializers.ValidationError("Only latin letters and digits.")
+        validate_username_shape(value)
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("This user name is taken.")
         return value

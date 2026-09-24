@@ -28,6 +28,7 @@
           </select>
         </label>
         <span v-if="loading" class="loading">Loading...</span>
+        <span v-else-if="loadError" class="load-error">{{ loadError }}</span>
       </div>
 
       <div v-if="items.length === 0 && !loading" class="empty">
@@ -53,7 +54,7 @@ import { PAGE_SIZE } from './api/comments'
 
 const auth = useAuth()
 const profile = computed(() => auth.profile.value)
-const { items, total, page, sort, loading, load, setSort, setPage, connectLive } = useComments()
+const { items, total, page, sort, loading, error: loadError, load, setSort, setPage, connectLive } = useComments()
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
 const sortProxy = computed({
@@ -175,6 +176,11 @@ body {
 .loading {
   font-size: 13px;
   color: #6b7280;
+}
+
+.load-error {
+  font-size: 13px;
+  color: #dc2626;
 }
 
 .empty {
