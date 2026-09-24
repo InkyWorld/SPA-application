@@ -1,0 +1,591 @@
+openapi: 3.0.3
+info:
+  title: SPA Comments API
+  version: 1.0.0
+  description: 'Test assignment: nested comments with captcha, files and JWT.'
+paths:
+  /api/comments/:
+    get:
+      operationId: comments_list
+      description: |-
+        Return one page of top-level comments with nested replies.
+
+        Args:
+            request: DRF request; honors the `?sort=` and `?page=` params.
+
+        Returns:
+            Paginated response with nested comment trees (cached 5 min).
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - comments
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCommentNodeList'
+          description: ''
+    post:
+      operationId: comments_create
+      description: |-
+        Validate input, create a comment and notify WS subscribers.
+
+        Args:
+            request: DRF request with multipart form data.
+
+        Returns:
+            201 response with the new comment id, or 400 with field errors.
+      tags:
+      - comments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentCreate'
+          description: ''
+  /api/comments/preview/:
+    post:
+      operationId: comments_preview_create
+      description: |-
+        Sanitize markup and return it without saving anything.
+
+        Args:
+            request: DRF request with a JSON body holding "text".
+
+        Returns:
+            Response with the sanitized "html", or 400 on bad markup.
+      tags:
+      - comments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Preview'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Preview'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Preview'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preview'
+          description: ''
+  /api/me/:
+    get:
+      operationId: me_retrieve
+      description: Current JWT profile.
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/register/:
+    post:
+      operationId: register_create
+      description: Public registration with user name, email and password.
+      tags:
+      - register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/token/:
+    post:
+      operationId: token_create
+      description: JWT pair issuance by email + password (instead of username).
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtain'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtain'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtain'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTokenObtain'
+          description: ''
+  /api/token/refresh/:
+    post:
+      operationId: token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+components:
+  schemas:
+    CommentCreate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        parent_id:
+          type: integer
+          nullable: true
+        user_name:
+          type: string
+        email:
+          type: string
+          format: email
+        home_page:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
+        text:
+          type: string
+          description: Sanitized XHTML with allowed tags only
+        file:
+          type: string
+          format: uri
+          nullable: true
+          writeOnly: true
+        captcha_key:
+          type: string
+          writeOnly: true
+        captcha_value:
+          type: string
+          writeOnly: true
+      required:
+      - captcha_key
+      - captcha_value
+      - id
+      - text
+    CommentNode:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        parent_id:
+          type: integer
+          nullable: true
+          readOnly: true
+        user_name:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        home_page:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 500
+          - type: string
+            maxLength: 0
+        text:
+          type: string
+          description: Sanitized XHTML with allowed tags only
+        image_url:
+          type: string
+          nullable: true
+          description: |-
+            Return the attached image URL.
+
+            Args:
+                obj: Comment being serialized.
+
+            Returns:
+                Image URL, or None when no image is attached.
+          readOnly: true
+        image_name:
+          type: string
+          nullable: true
+          description: |-
+            Return the attached image filename.
+
+            Args:
+                obj: Comment being serialized.
+
+            Returns:
+                Image filename, or None when no image is attached.
+          readOnly: true
+        file_url:
+          type: string
+          nullable: true
+          description: |-
+            Return the attached text-file URL.
+
+            Args:
+                obj: Comment being serialized.
+
+            Returns:
+                File URL, or None when no file is attached.
+          readOnly: true
+        file_name:
+          type: string
+          nullable: true
+          description: |-
+            Return the attached text-file filename.
+
+            Args:
+                obj: Comment being serialized.
+
+            Returns:
+                File filename, or None when no file is attached.
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        replies:
+          type: array
+          items: {}
+          description: |-
+            Serialize nested replies from the prebuilt children map.
+
+            Args:
+                obj: Comment being serialized.
+
+            Returns:
+                Serialized child comments (empty list for leaves).
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - file_name
+      - file_url
+      - id
+      - image_name
+      - image_url
+      - parent_id
+      - replies
+      - text
+      - user_name
+    EmailTokenObtain:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    Me:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user_name:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+      required:
+      - email
+      - id
+      - user_name
+    PaginatedCommentNodeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentNode'
+    Preview:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+      - text
+    Register:
+      type: object
+      properties:
+        user_name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+      required:
+      - email
+      - password
+      - user_name
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
