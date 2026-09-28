@@ -5,15 +5,14 @@ from __future__ import annotations
 import io
 import re
 
+from django.test import TransactionTestCase
 from PIL import Image
-
-from django.test import TestCase
 
 from apps.comments.models import Comment
 from apps.comments.tests.helpers import XHR, fresh_captcha, login_as, post_comment
 
 
-class CommentCreateTests(TestCase):
+class CommentCreateTests(TransactionTestCase):
     def test_create_top_level(self):
         """A valid post creates a top-level comment with sanitized text."""
         response = post_comment(self.client)
@@ -34,9 +33,7 @@ class CommentCreateTests(TestCase):
 
     def test_author_spoof_ignored(self):
         """Submitted user_name/email cannot impersonate another author."""
-        response = post_comment(
-            self.client, user_name="hacker", email="evil@x.cc"
-        )
+        response = post_comment(self.client, user_name="hacker", email="evil@x.cc")
         comment = Comment.objects.get(pk=response.json()["id"])
         self.assertEqual(comment.user_name, "tester")
         self.assertEqual(comment.email, "tester@x.cc")
@@ -44,15 +41,21 @@ class CommentCreateTests(TestCase):
     def test_anon_create_rejected(self):
         """Anonymous posting returns 401."""
         key, code = fresh_captcha(self.client)
-        response = self.client.post("/api/comments/", {
-            "text": "hi", "captcha_key": key, "captcha_value": code,
-        })
+        response = self.client.post(
+            "/api/comments/",
+            {
+                "text": "hi",
+                "captcha_key": key,
+                "captcha_value": code,
+            },
+        )
         self.assertEqual(response.status_code, 401)
 
     def test_anon_preview_rejected(self):
         """Anonymous preview returns 401."""
         response = self.client.post(
-            "/api/comments/preview/", {"text": "hi"},
+            "/api/comments/preview/",
+            {"text": "hi"},
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 401)
@@ -79,11 +82,15 @@ class CommentCreateTests(TestCase):
 
     def test_bad_email_rejected(self):
         """Malformed e-mails return 400."""
-        self.assertEqual(post_comment(self.client, email="not-an-email").status_code, 400)
+        self.assertEqual(
+            post_comment(self.client, email="not-an-email").status_code, 400
+        )
 
     def test_bad_home_page_rejected(self):
         """Malformed home page URLs return 400."""
-        self.assertEqual(post_comment(self.client, home_page="not-a-url").status_code, 400)
+        self.assertEqual(
+            post_comment(self.client, home_page="not-a-url").status_code, 400
+        )
 
     def test_home_page_optional(self):
         """Omitting the home page still creates the comment."""
@@ -123,17 +130,27 @@ class CommentCreateTests(TestCase):
         """A consumed CAPTCHA key cannot create a second comment."""
         login_as(self.client)
         key, code = fresh_captcha(self.client)
-        first = self.client.post("/api/comments/", {
-            "text": "hi", "captcha_key": key, "captcha_value": code,
-        })
+        first = self.client.post(
+            "/api/comments/",
+            {
+                "text": "hi",
+                "captcha_key": key,
+                "captcha_value": code,
+            },
+        )
         self.assertEqual(first.status_code, 201)
-        retry = self.client.post("/api/comments/", {
-            "text": "hi", "captcha_key": key, "captcha_value": code,
-        })
+        retry = self.client.post(
+            "/api/comments/",
+            {
+                "text": "hi",
+                "captcha_key": key,
+                "captcha_value": code,
+            },
+        )
         self.assertEqual(retry.status_code, 400)
 
 
-class CaptchaIssueTests(TestCase):
+class CaptchaIssueTests(TransactionTestCase):
     def test_refresh_returns_key_and_image_url(self):
         """The refresh endpoint issues a key with a loadable PNG image."""
         response = self.client.get("/api/captcha/refresh/", **XHR)

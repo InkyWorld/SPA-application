@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from django.db import connection
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.test.utils import CaptureQueriesContext
 
 from apps.comments import selectors
@@ -11,7 +11,7 @@ from apps.comments.models import Comment
 from apps.comments.tests.helpers import post_comment
 
 
-class ListCacheVersionTests(TestCase):
+class ListCacheVersionTests(TransactionTestCase):
     def test_bump_changes_key(self):
         """Bumping the version retires the previous cache key."""
         before = selectors.list_cache_key(None, 1)
@@ -19,7 +19,7 @@ class ListCacheVersionTests(TestCase):
         self.assertNotEqual(before, selectors.list_cache_key(None, 1))
 
 
-class ListCacheTests(TestCase):
+class ListCacheTests(TransactionTestCase):
     def test_second_identical_list_hits_cache(self):
         """A repeated list request touches no comment tables."""
         Comment.objects.all().delete()

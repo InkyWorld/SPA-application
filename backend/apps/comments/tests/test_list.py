@@ -6,14 +6,14 @@ import tempfile
 import uuid
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import TransactionTestCase, override_settings
 from PIL import Image
 
 from apps.comments.models import Comment
 from apps.comments.tests.helpers import login_as, make_png, post_comment
 
 
-class CommentListTests(TestCase):
+class CommentListTests(TransactionTestCase):
     def setUp(self):
         """Start each test from a clean slate with three known comments."""
         Comment.objects.all().delete()
@@ -55,7 +55,9 @@ class CommentListTests(TestCase):
         ]
         desc = [
             c["user_name"]
-            for c in self.client.get("/api/comments/?sort=-created_at").json()["results"]
+            for c in self.client.get("/api/comments/?sort=-created_at").json()[
+                "results"
+            ]
         ]
         self.assertEqual(asc, ["bob", "alice", "carol"])
         self.assertEqual(desc, ["carol", "alice", "bob"])
@@ -97,7 +99,7 @@ class CommentListTests(TestCase):
         self.assertTrue(node["file_url"].endswith(".txt"))
 
 
-class PreviewTests(TestCase):
+class PreviewTests(TransactionTestCase):
     def setUp(self):
         """Preview requires login, like posting does."""
         login_as(self.client)
@@ -131,7 +133,7 @@ class PreviewTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
 
-class FileUploadTests(TestCase):
+class FileUploadTests(TransactionTestCase):
     def setUp(self):
         """Redirect uploads to a temp dir for the test."""
         self._tmp = tempfile.TemporaryDirectory()
@@ -173,7 +175,7 @@ class FileUploadTests(TestCase):
         self.assertEqual(post_comment(self.client, file=exe).status_code, 400)
 
 
-class MiscTests(TestCase):
+class MiscTests(TransactionTestCase):
     def test_cors_header_present(self):
         """API responses carry the permissive CORS header."""
         response = self.client.get("/api/comments/")

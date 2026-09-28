@@ -10,6 +10,12 @@ from django.core.files.uploadedfile import UploadedFile
 from PIL import Image
 
 IMAGE_EXTS = set(settings.IMAGE_EXTENSIONS)
+IMAGE_FORMATS = {
+    ".jpg": "JPEG",
+    ".jpeg": "JPEG",
+    ".png": "PNG",
+    ".gif": "GIF",
+}
 
 
 def is_image(upload: UploadedFile) -> bool:
@@ -42,7 +48,9 @@ def validate_upload(upload: UploadedFile | None) -> None:
     elif ext == ".txt":
         _validate_text(upload)
     else:
-        raise ValidationError({"file": "Only JPG/GIF/PNG images or TXT files are allowed."})
+        raise ValidationError(
+            {"file": "Only JPG/GIF/PNG images or TXT files are allowed."}
+        )
 
 
 def _validate_image(upload: UploadedFile) -> None:
@@ -58,6 +66,15 @@ def _validate_image(upload: UploadedFile) -> None:
         upload.seek(0)
         with Image.open(upload) as img:
             img.verify()
+            actual_format = img.format
+            if actual_format not in IMAGE_FORMATS.values():
+                raise ValidationError({"image": "Unsupported image format."})
+            normalized_suffix = {
+                "JPEG": ".jpg",
+                "PNG": ".png",
+                "GIF": ".gif",
+            }[actual_format]
+            upload.name = f"{Path(upload.name).stem}{normalized_suffix}"
     except Exception as exc:
         raise ValidationError({"image": "Invalid image file."}) from exc
     finally:
@@ -85,5 +102,8 @@ def resize_image(path: str) -> None:
     """
     max_size: tuple[int, int] = settings.IMAGE_MAX_SIZE
     with Image.open(path) as img:
+        image_format = img.format
         img.thumbnail(max_size, Image.Resampling.LANCZOS)
-        img.save(path)
+        if image_format == "JPEG" and img.mode not in ("RGB", "L"):
+            img = img.convert("RGB")
+        img.save(path, format=image_format)

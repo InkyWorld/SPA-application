@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -23,7 +26,9 @@ def comment_saved(sender, instance: Comment, created: bool, **kwargs) -> None:
     """
     if not created:
         return
-    selectors.bump_list_cache_version()
-    events.comment_created(instance.pk)
+    transaction.on_commit(lambda: selectors.bump_list_cache_version())
+    transaction.on_commit(lambda: events.comment_created(instance.pk))
     if instance.image:
-        resize_comment_image.delay(instance.pk)
+        transaction.on_commit(
+            lambda: cast(Any, resize_comment_image).delay(instance.pk)
+        )

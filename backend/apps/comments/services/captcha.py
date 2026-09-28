@@ -51,5 +51,5 @@ def verify_captcha(key: str, value: str) -> None:
     ).first()
     if store is not None:
         store.delete()
-    if store is None or store.response != response:
+    if store is None or store.response.strip().lower() != response:
         raise serializers.ValidationError("Invalid CAPTCHA.")

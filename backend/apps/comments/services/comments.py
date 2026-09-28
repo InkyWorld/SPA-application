@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from django.core.files.uploadedfile import UploadedFile
+from django.db import transaction
 
 from apps.comments.models import Comment
 from apps.comments.services import files as file_rules
@@ -62,6 +63,7 @@ class CommentCreator:
             image=image,
             text_file=text_file,
         )
-        comment.full_clean(exclude=["text"])
-        comment.save()
+        with transaction.atomic():
+            comment.full_clean(exclude=["text"])
+            comment.save()
         return comment

@@ -197,8 +197,14 @@ up the DB first:
 
 ```bash
 docker compose up -d db
-uv run python backend/manage.py test apps.comments
+docker compose exec -e CELERY_EAGER=True backend python manage.py test apps.comments
 ```
+
+The eager flag is intentional for local tests: it executes image-resize tasks
+against the temporary Django test database. Production Compose sets
+`CELERY_EAGER=False`, so those tasks are processed by the worker service.
+When running the backend directly on Windows PowerShell, use
+`$env:CELERY_EAGER="True"; uv run python backend/manage.py test apps.comments`.
 
 Test/prod isolation is enforced by the runner itself: tests execute in a
 separate `test_comments` database (Django's `test_` prefix), production data
