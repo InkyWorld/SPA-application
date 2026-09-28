@@ -6,13 +6,12 @@ import io
 import tempfile
 from datetime import timedelta
 
+from captcha.models import CaptchaStore
 from django.conf import settings as dj_settings
 from django.core.files.base import ContentFile
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from PIL import Image
-
-from captcha.models import CaptchaStore
 
 from apps.comments.models import Comment
 from apps.comments.tasks import cleanup_expired_captchas, resize_comment_image

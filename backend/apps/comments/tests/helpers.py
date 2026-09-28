@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import io
 
+from captcha.models import CaptchaStore
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
-
-from captcha.models import CaptchaStore
 
 XHR = {"HTTP_X_REQUESTED_WITH": "XMLHttpRequest"}
 

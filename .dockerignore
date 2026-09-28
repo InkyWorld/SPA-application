@@ -8,8 +8,10 @@ backend/staticfiles/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.mypy_cache/
 .git/
 .gitignore
 README.md
 docs/
 .env
+backend/apps/comments/tests/

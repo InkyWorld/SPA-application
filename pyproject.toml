@@ -22,3 +22,16 @@ dependencies = [
     "redis>=8.1.0",
     "whitenoise>=6.6",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.9",
+]
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "RUF"]
+ignore = ["B904", "E402", "E501", "RUF012"]

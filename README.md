@@ -131,12 +131,18 @@ Requirements: Docker + Docker Compose.
 # 1. Clone and enter the directory
 git clone <repo-url> && cd SPA-application
 
-# 2. Bring up the whole stand with one command (builds 3 images, starts 6 services)
+# 2. Create local environment configuration
+cp .env.example .env
+
+# 3. Bring up the whole stand with one command
 docker compose up -d --build
 
-# 3. Wait for healthy statuses (~30s) and load demo data (30 tops, 2 pages)
+# 4. Load demo data (30 tops, 2 pages)
 docker compose exec -T backend python manage.py seed_comments
 ```
+
+On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
+Set a random value for `DJANGO_SECRET_KEY` before deploying publicly.
 
 Where everything is after startup:
 
@@ -196,15 +202,16 @@ runner) and run **only against PostgreSQL** (the same DBMS as prod) — bring
 up the DB first:
 
 ```bash
-docker compose up -d db
-docker compose exec -e CELERY_EAGER=True backend python manage.py test apps.comments
+docker compose up -d db redis
+# Linux/macOS
+POSTGRES_HOST=localhost CELERY_EAGER=True uv run python backend/manage.py test apps.comments
 ```
 
 The eager flag is intentional for local tests: it executes image-resize tasks
 against the temporary Django test database. Production Compose sets
 `CELERY_EAGER=False`, so those tasks are processed by the worker service.
 When running the backend directly on Windows PowerShell, use
-`$env:CELERY_EAGER="True"; uv run python backend/manage.py test apps.comments`.
+`$env:POSTGRES_HOST="localhost"; $env:CELERY_EAGER="True"; uv run python backend/manage.py test apps.comments`.
 
 Test/prod isolation is enforced by the runner itself: tests execute in a
 separate `test_comments` database (Django's `test_` prefix), production data

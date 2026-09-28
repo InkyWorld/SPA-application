@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import unittest
 
+import pytest
 from channels.db import database_sync_to_async
 from channels.layers import get_channel_layer
 from channels.testing import WebsocketCommunicator
+from config.asgi import application
 from django.test import Client
 
 from apps.comments.tests.helpers import post_comment
-from config.asgi import application
+
+pytestmark = pytest.mark.django_db(transaction=True)
 
 
 class CommentsWsTests(unittest.IsolatedAsyncioTestCase):

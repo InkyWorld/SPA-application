@@ -6,14 +6,13 @@ import io
 import re
 from datetime import timedelta
 
+from captcha.models import CaptchaStore
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 from PIL import Image
 from rest_framework import serializers as drf_serializers
-
-from captcha.models import CaptchaStore
 
 from apps.comments import selectors
 from apps.comments.models import Comment
@@ -203,7 +202,7 @@ class CommentCreatorTests(TestCase):
 
     def test_bad_text_raises(self):
         """Unbalanced markup aborts creation with an error."""
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             CommentCreator().execute(
                 CreateCommentInput(user_name="Bob1", email="b@x.cc", text="<strong>oops")
             )

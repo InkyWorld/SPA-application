@@ -170,5 +170,5 @@ class CaptchaIssueTests(TransactionTestCase):
 
     def test_value_is_latin_alnum(self):
         """Issued CAPTCHA values stay within [A-Za-z0-9]+ (task requirement)."""
-        key, code = fresh_captcha(self.client)
+        _, code = fresh_captcha(self.client)
         self.assertTrue(re.fullmatch(r"[A-Za-z0-9]+", code), code)
